@@ -62,9 +62,9 @@
                                         shadow-sm
                                         focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
                                     " name="billing_type">
-                                <option>Monthly</option>
-                                <option>Yearly</option>
-                                <option>Fixed</option>
+                                    @foreach(\App\Models\Customer::BILL_TYPES as $key => $value)
+                                        <option {{ $customer->billing_type == $key ? "selected='selected'" : "" }} value="{{ $key }}">{{ $value }}</option>
+                                    @endforeach
                             </select>
                         </label>
                         <label class="mt-2 block">

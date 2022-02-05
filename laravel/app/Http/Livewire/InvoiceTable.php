@@ -2,8 +2,8 @@
 
 namespace App\Http\Livewire;
 
-use NumberFormatter;
 use App\Models\Customer;
+use App\Models\Invoice;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,11 +14,9 @@ use PowerComponents\LivewirePowerGrid\PowerGridEloquent;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use PowerComponents\LivewirePowerGrid\Traits\ActionButton;
 
-class CustomerTable extends PowerGridComponent
+class InvoiceTable extends PowerGridComponent
 {
     use ActionButton;
-
-    public string $type;
 
     /*
     |--------------------------------------------------------------------------
@@ -30,7 +28,6 @@ class CustomerTable extends PowerGridComponent
     public function setUp()
     {
         $this->showCheckBox()
-            ->showRecordCount('full')
             ->showPerPage()
             ->showExportOption('download', ['excel', 'csv'])
             ->showSearchInput();
@@ -45,8 +42,7 @@ class CustomerTable extends PowerGridComponent
     */
     public function datasource(): ?Builder
     {
-        return Customer::query();
-        // return Customer::query()->where('type', $this->type);
+        return Invoice::query();
     }
 
     /*
@@ -59,13 +55,6 @@ class CustomerTable extends PowerGridComponent
     public function relationSearch(): array
     {
         return [];
-
-        // return [
-        //     'store' => [ // relationship on dishes model
-        //         'name', // column enabled to search
-        //     ],
-        //     //...
-        // ];
     }
 
     /*
@@ -78,22 +67,29 @@ class CustomerTable extends PowerGridComponent
     */
     public function addColumns(): ?PowerGridEloquent
     {
-        $fmt = new NumberFormatter('en-US', NumberFormatter::CURRENCY);
-
         return PowerGrid::eloquent()
             ->addColumn('id')
-            ->addColumn('name')
-            ->addColumn('active')
-            ->addColumn('billing_type', function (Customer $model) {
-                return strtoupper($model->billing_type);
+            ->addColumn('customer_id')
+            ->addColumn('type')
+            ->addColumn('for_date_formatted', function (Invoice $model) {
+                if ($model->type == 'monthly') {
+                    return Carbon::parse($model->for_date)->format('M-Y');
+                } else if ($model->type == 'yearly') {
+                    return Carbon::parse($model->for_date)->format('Y');
+                }
+
+                return Carbon::parse($model->for_date)->format('d-M-Y');
             })
-            ->addColumn('balance', function (Customer $model) use ($fmt) {
-                return $fmt->formatCurrency($model->balance, "BDT");
+            ->addColumn('customer', function (Invoice $model) {
+                return $model->customer->name;
             })
-            ->addColumn('created_at_formatted', function (Customer $model) {
+            ->addColumn('amount')
+            ->addColumn('paid')
+            ->addColumn('status')
+            ->addColumn('created_at_formatted', function (Invoice $model) {
                 return Carbon::parse($model->created_at)->format('d/m/Y H:i:s');
             })
-            ->addColumn('updated_at_formatted', function (Customer $model) {
+            ->addColumn('updated_at_formatted', function (Invoice $model) {
                 return Carbon::parse($model->updated_at)->format('d/m/Y H:i:s');
             });
     }
@@ -108,14 +104,6 @@ class CustomerTable extends PowerGridComponent
     */
     public function columns(): array
     {
-        $types = [
-            ["key" => "Monthly", "value" => "monthly"],
-            ["key" => "Yearly", "value" => "yearly"]
-        ];
-
-        $canEdit = true; //User has edit permission
-        $canCopy = true;
-
         return [
             Column::add()
                 ->title(__('ID'))
@@ -123,60 +111,42 @@ class CustomerTable extends PowerGridComponent
                 ->makeInputRange(),
 
             Column::add()
-                ->title(__('Name'))
-                ->field('name')
-                ->searchable()
-                ->sortable()
-                ->makeInputText()
-                ->editOnClick($canEdit),
+                ->title(__('CUSTOMER'))
+                ->field('customer')
+                ->makeInputSelect(Customer::all(), 'name', 'customer_id'),
 
             Column::add()
-                ->title(__('Email'))
-                ->field('email')
-                ->searchable()
+                ->title(__('TYPE'))
+                ->field('type')
                 ->sortable()
-                ->makeInputText()
-                ->clickToCopy($canCopy, 'Copy to clipboard'),
-
+                ->searchable()
+                ->makeInputText(),
 
             Column::add()
-                ->title(__('Active'))
-                ->field('active')
+                ->title(__('FOR DATE'))
+                ->field('for_date_formatted')
                 ->searchable()
                 ->sortable()
-                ->makeBooleanFilter('active', 'Active', 'Inactive')
-                ->toggleable($canEdit, 'yes', 'no'),
+                ->makeInputDatePicker('for_date'),
 
             Column::add()
-                ->title(__('Billing Type'))
-                ->field('billing_type')
-                ->searchable()
+                ->title(__('AMOUNT'))
+                ->field('amount')
                 ->sortable()
-                ->makeInputSelect($types, 'key', 'value')
-                ->bodyAttribute('text-center', 'color:red')
-                ->headerAttribute('text-center', 'color:red'),
-
+                ->searchable(),
 
             Column::add()
-                ->title(__('Balance'))
-                ->field('balance')
-                ->makeInputRange(),
-
-
-            Column::add()
-                ->title(__('CREATED AT'))
-                ->field('created_at_formatted')
-                ->searchable()
+                ->title(__('PAID'))
+                ->field('paid')
                 ->sortable()
-                ->makeInputDatePicker('created_at'),
+                ->searchable(),
 
             Column::add()
-                ->title(__('UPDATED AT'))
-                ->field('updated_at_formatted')
-                ->searchable()
+                ->title(__('STATUS'))
+                ->field('status')
                 ->sortable()
-                ->makeInputDatePicker('updated_at')
-                ->hidden(),
+                ->searchable()
+                ->makeInputText(),
 
         ];
     }
@@ -192,27 +162,24 @@ class CustomerTable extends PowerGridComponent
 
     public function actions(): array
     {
-        $canClickButton = true;
-
         return [
-            // Button::add('edit')
-            //     ->caption(__('Edit'))
-            //     ->class('bg-indigo-500 text-white')
-            //     ->route('customer.edit', ['customer' => 'id']),
-
-            Button::add('edit-customer')
+            Button::add('edit-invoice')
                 ->caption('Edit')
                 ->class('bg-gray-300')
-                ->openModal('edit-customer', ['customer' => 'id'])
+                ->openModal('edit-invoice', ['invoice' => 'id'])
                 ->method('put')
-                ->route('customer.edit', ['customer' => 'id'])
-                ->can($canClickButton),
+                ->route('invoice.edit', ['invoice' => 'id'])
+                ->can(true),
 
+            //    Button::add('edit')
+            //        ->caption(__('Edit'))
+            //        ->class('bg-indigo-500 text-white')
+            //        ->route('invoice.edit', ['invoice' => 'id']),
 
             Button::add('destroy')
                 ->caption(__('Delete'))
                 ->class('bg-red-500 text-white')
-                ->route('customer.destroy', ['customer' => 'id'])
+                ->route('invoice.destroy', ['invoice' => 'id'])
                 ->method('delete')
         ];
     }
@@ -226,22 +193,17 @@ class CustomerTable extends PowerGridComponent
     |
     */
 
-
-    public function update(array $data): bool
+    /*
+    public function update(array $data ): bool
     {
-        try {
-            $updated = Customer::query()->find($data['id'])->update([
+       try {
+           $updated = Invoice::query()->find($data['id'])->update([
                 $data['field'] => $data['value']
-            ]);
-        } catch (QueryException $exception) {
-            $updated = false;
-        }
-
-        if ($updated) {
-            $this->fillData();
-        }
-
-        return $updated;
+           ]);
+       } catch (QueryException $exception) {
+           $updated = false;
+       }
+       return $updated;
     }
 
     public function updateMessages(string $status, string $field = '_default_message'): string
@@ -250,18 +212,16 @@ class CustomerTable extends PowerGridComponent
             'success'   => [
                 '_default_message' => __('Data has been updated successfully!'),
                 //'custom_field' => __('Custom Field updated successfully!'),
-                'name' => __('Customer name has been updated successfully!'),
             ],
             'error' => [
                 '_default_message' => __('Error updating the data.'),
-                'balance' => __('Error updating the balance.'),
                 //'custom_field' => __('Error updating custom field.'),
             ]
         ];
 
         return ($updateMessages[$status][$field] ?? $updateMessages[$status]['_default_message']);
     }
-
+    */
 
     public function template(): ?string
     {

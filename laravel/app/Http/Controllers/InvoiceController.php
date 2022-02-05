@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 
-class CustomerController extends Controller
+class InvoiceController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return view('customers.index');
+        return view('invoices.index');
     }
 
     /**
@@ -41,10 +41,10 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Invoice  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function show(Customer $customer)
+    public function show(Invoice $invoice)
     {
         //
     }
@@ -52,34 +52,40 @@ class CustomerController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Invoice  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function edit(Customer $customer)
+    public function edit(Invoice $invoice)
     {
-        dd($customer);
+        //
     }
 
-
-    public function update(Request $request, Customer $customer)
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Invoice  $invoice
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Invoice $invoice)
     {
         $input = $request->except('_token');
 
-        $customer->update($input);
+        $invoice->update($input);
 
-        return back()->with('success', 'Customer successfully updated.');
+        return back()->with('success', 'Invoice successfully updated.');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Customer  $customer
+     * @param  \App\Models\Invoice  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Customer $customer)
+    public function destroy(Invoice $invoice)
     {
-        $customer->delete();
+        $invoice->delete();
 
-        return back()->with('success', 'Customer successfully deleted.');
+        return back()->with('success', 'Invoice successfully deleted.');
     }
 }
