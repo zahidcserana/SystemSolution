@@ -20,8 +20,6 @@
         @powerGridStyles
     </head>
     <body class="font-sans antialiased">
-        <livewire:counter />
-        <livewire:show-posts />
 
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')

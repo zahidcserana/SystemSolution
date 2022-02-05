@@ -87,7 +87,7 @@ class InvoiceTable extends PowerGridComponent
             ->addColumn('paid')
             ->addColumn('status')
             ->addColumn('created_at_formatted', function (Invoice $model) {
-                return Carbon::parse($model->created_at)->format('d/m/Y H:i:s');
+                return Carbon::parse($model->created_at)->format('d/m/Y');
             })
             ->addColumn('updated_at_formatted', function (Invoice $model) {
                 return Carbon::parse($model->updated_at)->format('d/m/Y H:i:s');
@@ -148,6 +148,13 @@ class InvoiceTable extends PowerGridComponent
                 ->searchable()
                 ->makeInputText(),
 
+            Column::add()
+                ->title(__('CREATED AT'))
+                ->field('created_at_formatted')
+                ->searchable()
+                ->sortable()
+                ->makeInputDatePicker('created_at'),
+
         ];
     }
 
@@ -193,7 +200,6 @@ class InvoiceTable extends PowerGridComponent
     |
     */
 
-    /*
     public function update(array $data ): bool
     {
        try {
@@ -221,7 +227,6 @@ class InvoiceTable extends PowerGridComponent
 
         return ($updateMessages[$status][$field] ?? $updateMessages[$status]['_default_message']);
     }
-    */
 
     public function template(): ?string
     {

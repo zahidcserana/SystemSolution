@@ -163,20 +163,20 @@ class CustomerTable extends PowerGridComponent
                 ->makeInputRange(),
 
 
-            Column::add()
-                ->title(__('CREATED AT'))
-                ->field('created_at_formatted')
-                ->searchable()
-                ->sortable()
-                ->makeInputDatePicker('created_at'),
+            // Column::add()
+            //     ->title(__('CREATED AT'))
+            //     ->field('created_at_formatted')
+            //     ->searchable()
+            //     ->sortable()
+            //     ->makeInputDatePicker('created_at'),
 
-            Column::add()
-                ->title(__('UPDATED AT'))
-                ->field('updated_at_formatted')
-                ->searchable()
-                ->sortable()
-                ->makeInputDatePicker('updated_at')
-                ->hidden(),
+            // Column::add()
+            //     ->title(__('UPDATED AT'))
+            //     ->field('updated_at_formatted')
+            //     ->searchable()
+            //     ->sortable()
+            //     ->makeInputDatePicker('updated_at')
+            //     ->hidden(),
 
         ];
     }
